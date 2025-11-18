@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "temp2",
+    "contact": "7034569870",
+    "email": "temp2.ap@gmail.com",
+    "source": "Meta",
+    "status": "closed",
+    "assignedTo": "Rajesh Kumar",
+    "followUp": "2025-11-20",
+    "tags": [],
+    "customFields": {
+      "propertyType": "Custom",
+      "budget": "6000000",
+      "location": "Mumbai",
+      "timeline": "Monday"
+    },
+    "duplicateInfo": {
+      "isDuplicate": false,
+      "duplicateCount": 0
+    }
+  },
+  {
+    "id": 2,
+    "name": "temp1",
+    "contact": "7034569889",
+    "email": "temp1.ap@gmail.com",
+    "source": "Manual",
+    "status": "contacted",
+    "assignedTo": "Priya Sharma",
+    "followUp": "2025-11-15",
+    "tags": [],
+    "customFields": {
+      "propertyType": "Custom",
+      "budget": "6000000",
+      "location": "Mumbai",
+      "timeline": "Monday"
+    },
+    "duplicateInfo": {
+      "isDuplicate": false,
+      "duplicateCount": 0
+    }
+  }
+]
