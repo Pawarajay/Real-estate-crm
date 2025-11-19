@@ -39,8 +39,10 @@ router.put('/:id', async (req, res) => {
     );
     const [rows] = await db.query('SELECT * FROM leads WHERE id=?', [id]);
     res.json(rows[0]);
+  
   } catch (err) {
     res.status(500).json({ error: 'Failed to update lead' });
+
   }
 });
 
