@@ -57,4 +57,48 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+router.post('/assign-meta-leads', async (req, res) => {
+  const db = await req.db;
+
+  const campaignAgents = {
+    "Ad1": ["Rajesh Kumar", "Priya Sharma"],   
+    "Ad2": ["Amit Patel", "Sneha Reddy"],
+  };
+
+  try {
+    let updated = 0;
+    for (const campaign of Object.keys(campaignAgents)) {
+      const agents = campaignAgents[campaign];
+
+      const [unassignedLeads] = await db.query(
+        'SELECT * FROM leads WHERE source = "WhatsApp" AND campaign = ? AND (assignedTo IS NULL OR assignedTo = "" OR assignedTo = "-") ORDER BY createdAt ASC',
+        [campaign]
+      );
+
+      if (unassignedLeads.length === 0) continue;
+
+      const [latestAssigned] = await db.query(
+        'SELECT assignedTo FROM leads WHERE source = "WhatsApp" AND campaign = ? AND assignedTo IS NOT NULL AND assignedTo != "" ORDER BY updatedAt DESC, createdAt DESC LIMIT 1',
+        [campaign]
+      );
+      let lastAgentIndex = 0;
+      if (latestAssigned.length) {
+        const lastAgentName = latestAssigned[0].assignedTo;
+        const idx = agents.indexOf(lastAgentName);
+        lastAgentIndex = idx >= 0 ? idx : 0;
+      }
+      for (let i = 0; i < unassignedLeads.length; i++) {
+        const agentIdx = (lastAgentIndex + i + 1) % agents.length;
+        const agentName = agents[agentIdx];
+        await db.query('UPDATE leads SET assignedTo=? WHERE id=?', [agentName, unassignedLeads[i].id]);
+        updated++;
+      }
+    }
+    res.json({ updated, info: "Per-campaign agent round-robin complete!" });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to assign Meta Ad leads per campaign', details: err.message });
+  }
+});
+
+
 module.exports = router;

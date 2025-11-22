@@ -134,28 +134,27 @@ export default function Leads() {
   const [mergeModal, setMergeModal] = useState<{ primary: Lead | null; duplicates: Lead[] }>({ primary: null, duplicates: [] });
   const [showWhatsappOnly, setShowWhatsappOnly] = useState(false);
 
-  useEffect(() => { fetchLeads(); },
-    [statusFilter, search, assignedTo, selectedTag, user]
-  );
+  useEffect(() => { fetchLeads(); }, [statusFilter, search, assignedTo, selectedTag, user]);
 
+  //---- REPLACE ENTIRE fetchLeads FUNCTION (this is the new version for auto agent assignment) ----
   async function fetchLeads() {
     setLoading(true);
-    let params: any = {};
+    let params = {};
     if (statusFilter !== "all") params.status = statusFilter;
     if (search.trim().length > 0) params.search = search;
     if (user?.role === "admin" && assignedTo !== "all") params.assignedTo = assignedTo;
     if (selectedTag !== "all") params.tag = selectedTag;
     if (user?.role === "agent") params.assignedTo = user.displayName;
+
     try {
+      // 1. Auto-assign unassigned Meta Ad leads
+      await fetch("/api/leads/assign-meta-leads", { method: "POST" });
+
+      // 2. Fetch all leads
       const res = await getLeads({ params });
-      let regularLeads: Lead[] = [];
-      if (Array.isArray(res.data)) {
-        regularLeads = addDuplicateInfo(res.data);
-      } else {
-        setError("Failed to load regular leads (invalid server data)");
-        setLeads([]); setLoading(false); return;
-      }
-      let whatsappLeadsNormalized: Lead[] = [];
+      let regularLeads = Array.isArray(res.data) ? addDuplicateInfo(res.data) : [];
+      let whatsappLeadsNormalized = [];
+
       try {
         const whatsappLeads = await getWhatsappLeads();
         if (Array.isArray(whatsappLeads)) {
@@ -166,7 +165,8 @@ export default function Leads() {
             createdAt: contact.createdAt,
           }));
         }
-      } catch (waErr) { }
+      } catch (waErr) {}
+
       let mergedLeads = [...regularLeads, ...whatsappLeadsNormalized];
       if (user?.role === "agent") {
         mergedLeads = mergedLeads.filter(
@@ -181,6 +181,8 @@ export default function Leads() {
       setLoading(false);
     }
   }
+  //---- END fetchLeads FUNCTION ----
+
   function handleAddLead(lead: Omit<Lead, "id">) {
     setLoading(true);
     addLead(lead)
